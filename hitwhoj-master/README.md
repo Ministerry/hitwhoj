@@ -17,3 +17,4 @@ TODO
 
 ## 工程论文
 
+[docs]: ./docs/paper-Myren-1.0.doc
