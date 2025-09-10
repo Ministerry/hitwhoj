@@ -1,0 +1,61 @@
+name: GitHub CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgres://postgres:mysecretpassword@localhost:5432/postgres
+      S3_ACCESS_KEY: testadmin
+      S3_SECRET_KEY: testpassword
+      S3_BUCKET: hitwhoj
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+
+      - name: Deploy postgres
+        run: |
+          docker run -d -p 5432:5432 --name postgres \
+                     -e "POSTGRES_PASSWORD=mysecretpassword" \
+                     postgres
+
+      - name: Deploy minio
+        run: |
+          docker run -d -p 9000:9000 --name minio \
+                     -e "MINIO_ACCESS_KEY=testadmin" \
+                     -e "MINIO_SECRET_KEY=testpassword" \
+                     minio/minio server /data
+
+      - name: Environments and version
+        run: |
+          node --version
+          yarn --version
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Check formats and types
+        run: |
+          yarn run lint:check
+          yarn run tsc
+          yarn run fmt.check
+
+      - name: Test
+        run: |
+          yarn run prisma migrate dev
+          yarn run prisma db seed
+          yarn run test
+
+      - name: Build
+        run: yarn run build

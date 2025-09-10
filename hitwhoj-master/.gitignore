@@ -1,0 +1,13 @@
+node_modules
+
+/.vscode
+/.idea
+
+*.log
+/.nyc_output
+
+/.cache
+/build
+/public/build
+/app/styles
+.env
